@@ -1,26 +1,47 @@
 #include "../include/securec.h"
 
-/*
- * sec_memset_s
- * ------------------------------------------------------------
- * Secure replacement for memset()
+/**
+ * @file sec_memset_s.c
+ * @brief Secure implementation of memory set function.
  *
- * Features:
- *  - NULL pointer validation
- *  - Destination size validation
- *  - Overflow protection
- *  - Prevent compiler optimization (for secure zeroization)
- *  - Returns standardized error codes
+ * @details
+ * This file implements sec_memset_s(), a secure and defensive replacement
+ * for standard C memset() and optional libc memset_s() implementations.
  *
- * Parameters:
- *  dest    : destination buffer
- *  destsz  : total size of destination buffer
- *  ch      : byte value to set
- *  count   : number of bytes to set
+ * The function is designed for enterprise, embedded, and automotive-grade
+ * secure coding environments where memory safety, deterministic behavior,
+ * and compliance with standards such as CERT-C, MISRA C, and ISO/SAE 21434
+ * are required.
  *
- * Returns:
- *  SEC_OK on success
- *  Error code otherwise
+ * ---------------------------------------------------------------------------
+ * @section comparison Comparison with Standard memset() and libc memset_s()
+ *
+ * | Feature / Criteria                  | Standard memset() | libc memset_s() (Annex K) | sec_memset_s() |
+ * |------------------------------------|-------------------|----------------------------|----------------|
+ * | Bounds checking                     | No                | Yes                        | Yes (strict + configurable) |
+ * | NULL pointer handling               | Undefined behavior| Returns error              | Explicit error handling |
+ * | Overflow protection                 | No                | Yes                        | Yes + defensive clearing |
+ * | Guaranteed memory write             | No (may optimize) | Yes                        | Yes (volatile enforced) |
+ * | Cross-platform availability         | Universal         | Limited/inconsistent       | Fully controlled internal |
+ * | Standardized error codes            | None              | Implementation dependent   | Unified error model |
+ * | Configurable max buffer protection  | No                | No                         | Yes (SEC_MAX_BUFFER) |
+ * | Defensive clearing on error         | No                | Not guaranteed             | Yes |
+ * | Secure coding compliance alignment  | No                | Partial                    | CERT-C, MISRA, ISO21434 |
+ * | Embedded/automotive suitability     | Risky             | Limited                    | Designed for safety/security |
+ * | Internal trade-secret value         | No                | No                         | Yes |
+ *
+ * ---------------------------------------------------------------------------
+ * @section benefits Key Security Benefits
+ *
+ * - Prevents buffer overflow and misuse
+ * - Ensures deterministic secure memory clearing
+ * - Prevents compiler optimization removal of sensitive memory wiping
+ * - Provides standardized error handling across secure library
+ * - Supports enterprise secure coding best practices
+ *
+ * This implementation forms part of the SecureC Library initiative aimed at
+ * strengthening secure-by-design software development across the organization.
+ *
  */
 
 int sec_memset_s(void *dest, size_t destsz,
