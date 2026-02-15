@@ -47,42 +47,49 @@
 int sec_memset_s(void *dest, size_t destsz,
                  int ch, size_t count)
 {
+    int rc;
+
     /* ---------------------------------------------------------
-     * Basic pointer validation
+     * Validate destination pointer
      * --------------------------------------------------------- */
-    if (dest == NULL)
+    rc = sec_validate_ptr(dest);
+    if (rc != SEC_OK)
     {
-        return SEC_ERR_NULL;
+        return rc;
     }
 
     /* ---------------------------------------------------------
-     * Size validation
+     * Validate destination size
      * --------------------------------------------------------- */
-    if (destsz == 0U || destsz > SEC_MAX_BUFFER)
+    rc = sec_validate_size(destsz);
+    if (rc != SEC_OK)
     {
-        return SEC_ERR_SIZE;
+        return rc;
     }
 
     /* ---------------------------------------------------------
-     * Overflow / bounds check
+     * Validate requested operation range
      * --------------------------------------------------------- */
-    if (count > destsz)
+    rc = sec_validate_range(destsz, count);
+    if (rc != SEC_OK)
     {
-        /* If overflow risk, clear full buffer defensively */
-        volatile unsigned char *d = (volatile unsigned char *)dest;
-        size_t i;
-
-        for (i = 0U; i < destsz; i++)
+        /* Defensive clearing if overflow attempt detected */
+        if (rc == SEC_ERR_OVERFLOW)
         {
-            d[i] = 0U;
-        }
+            volatile unsigned char *d = (volatile unsigned char *)dest;
+            size_t i;
 
-        return SEC_ERR_OVERFLOW;
+            for (i = 0U; i < destsz; i++)
+            {
+                d[i] = 0U;
+            }
+        }
+        return rc;
     }
 
     /* ---------------------------------------------------------
-     * Perform memory set using volatile pointer
-     * Prevents compiler optimization removal
+     * Perform secure memory set
+     * Using volatile pointer prevents optimization removal
      * --------------------------------------------------------- */
     volatile unsigned char *d = (volatile unsigned char *)dest;
     size_t i;
